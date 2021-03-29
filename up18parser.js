@@ -70,6 +70,7 @@ var q = tress(function (url, callback) {
 
       const parsedItems = await parseItems($);
       results.mappedParsedData.push(...parsedItems);
+      saveData();
 
     })
     .then(() => {
@@ -82,10 +83,14 @@ var q = tress(function (url, callback) {
 
 q.drain = function () {
   console.log('Данные собраны!')
-  fs.writeFileSync(baseFileName, JSON.stringify(results, null, 4));
+  saveData();
 }
 
 q.push(baseUrl);
+
+function saveData() {
+  fs.writeFileSync(baseFileName, JSON.stringify(results, null, 4));
+}
 
 async function parseItems($) {
 
@@ -99,7 +104,7 @@ async function parseItems($) {
 
       const promiseToGetItem = new Promise(async (res, rej) => {
 
-        const price = $element.find('[itemProp="price"]').text().trim().replaceAll(' ', '');
+        const price = $element.find('[itemProp="price"]').text().trim().replace(/\s*/g, '');
         const articul = $element.find('.itemArt span').text().trim();
         const itemTitle = $element.find('.itemTitle span').text().trim();
         const linkTo = getValidLink($element.find('.itemTitle a').attr('href'));
