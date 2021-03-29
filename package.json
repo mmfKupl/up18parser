@@ -1,0 +1,15 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "up18parser.js",
+  "author": "",
+  "license": "ISC",
+  "bin": "up18parser.js",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.5",
+    "needle": "^2.6.0",
+    "request": "^2.88.2",
+    "tress": "^1.1.4"
+  }
+}
