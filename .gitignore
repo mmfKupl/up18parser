@@ -1,0 +1,6 @@
+/node_modules/
+/test-linux
+/test-macos
+/test-win.exe
+/up18parser.exe
+/.idea

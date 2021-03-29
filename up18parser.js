@@ -40,7 +40,7 @@ class Item {
 
   constructor(artikul, image, itemTitle, linkTo, price) {
     this.artikul = artikul;
-    this.image = image;
+    this.image = !image || image.includes('nofoto.jpg') ? '' : image;
     this.itemTitle = itemTitle;
     this.linkTo = linkTo;
     this.price = price;
@@ -99,7 +99,7 @@ async function parseItems($) {
 
       const promiseToGetItem = new Promise(async (res, rej) => {
 
-        const price = $element.find('[itemProp="price"]').text().trim();
+        const price = $element.find('[itemProp="price"]').text().trim().replaceAll(' ', '');
         const articul = $element.find('.itemArt span').text().trim();
         const itemTitle = $element.find('.itemTitle span').text().trim();
         const linkTo = getValidLink($element.find('.itemTitle a').attr('href'));
