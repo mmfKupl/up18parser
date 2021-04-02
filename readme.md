@@ -48,6 +48,20 @@ pkg .
 ./up18parser.exe --wi
 ```
 
+--urlsToParse или --utp - если есть этот флаг, то будет прочитан файл по указанному пути, и будут распашены только указанные в файле страницы
+```
+пример
+есть файл sample.json
+с содержанием
+[
+    "https://up18.by/catalog/zapchasti-i-detali-dlya-elektroinstrumenta/prochie-zapasnye-chasti-k-instrumentu-bosch/?page=5",
+    "https://up18.by/catalog/zapchasti-i-detali-dlya-elektroinstrumenta/prochie-zapasnye-chasti-k-instrumentu-bosch/?page=15"
+]
+
+
+./up18parser.exe --utp="sample.json" - результат будет сбор данных с этих двух страниц
+```
+
 
 еще примеры
 ```

@@ -6,22 +6,28 @@ const request = require('request');
 const path = require('path');
 const URLresolve = require('url').resolve;
 
-const urlArgument = process.argv.find(item => item.startsWith("--url") || item.startsWith("--u="));
-const folderArgument = process.argv.find(item => item.startsWith("--folder") || item.startsWith("--f="));
-const resultFileArgument = process.argv.find(item => item.startsWith("--fileName") || item.startsWith("--fn="));
+const urlsToParseArgument = process.argv.find(item => item.startsWith("--urlsToParse=") || item.startsWith("--utp="));
+const urlArgument = process.argv.find(item => item.startsWith("--url=") || item.startsWith("--u="));
+const folderArgument = process.argv.find(item => item.startsWith("--folder=") || item.startsWith("--f="));
+const resultFileArgument = process.argv.find(item => item.startsWith("--fileName=") || item.startsWith("--fn="));
 const notDownloadImagesArgument = process.argv.find(item => item.startsWith("--withoutImages") || item.startsWith("--wi"));
 const firsFileName = (resultFileArgument && resultFileArgument.split('=')[1]) || 'data.json';
 
+const urlsToParsePath = (urlsToParseArgument && urlsToParseArgument.split('=')[1]) || '';
 const baseFolder = (folderArgument && folderArgument.split('=')[1]) || 'files';
 const baseUrl = (urlArgument && urlArgument.split('=')[1]) || 'https://up18.by/brends/toya/';
 const baseFileName = firsFileName.endsWith('.json') ? firsFileName : firsFileName + '.json';
 const withoutImagesFlag = !!notDownloadImagesArgument || false;
 
-if (!fs.existsSync(baseFolder) && !withoutImagesFlag){
+if (!fs.existsSync(baseFolder) && !withoutImagesFlag) {
   fs.mkdirSync(baseFolder);
 }
 
-console.log('Будут собраны элемент со страницы - ' + baseUrl);
+if (urlsToParsePath) {
+  console.log('Будут обработаны страницы документа - ' + urlsToParsePath);
+} else {
+  console.log('Будут собраны элемент со страницы - ' + baseUrl);
+}
 console.log('Информация будет записана в файл - ' + baseFileName);
 if (!withoutImagesFlag) {
   console.log('Фотографии будут сохранены в папку - ' + baseFolder);
@@ -30,6 +36,7 @@ if (!withoutImagesFlag) {
 const results = {
   mappedParsedData: [],
 }
+const crashedUrls = [];
 
 class Item {
   artikul;
@@ -62,21 +69,23 @@ var q = tress(function (url, callback) {
 
       var $ = cheerio.load(res.body);
       console.log('Сбор информации со страницы - ' + url);
-      const nextPage = $('.pagination span + a').attr('href');
-      if (nextPage) {
-        q.push(nextPage);
+      if (!urlsToParsePath) {
+        const nextPage = $('.pagination span + a').attr('href');
+        if (nextPage) {
+          q.push(getValidLink(nextPage));
+        }
       }
-
 
       const parsedItems = await parseItems($);
       results.mappedParsedData.push(...parsedItems);
       saveData();
 
     })
-    .then(() => {
-      callback();
+    .catch(err => {
+      console.log(err);
+      saveCrushedUrls(url);
     })
-    .catch(err => console.log(err))
+    .finally(() => callback())
 
 
 });
@@ -86,10 +95,21 @@ q.drain = function () {
   saveData();
 }
 
-q.push(baseUrl);
+if (urlsToParsePath) {
+  for (const url of getJsonFromFile(urlsToParsePath)) {
+    q.push(url);
+  }
+} else {
+  q.push(baseUrl);
+}
 
 function saveData() {
   fs.writeFileSync(baseFileName, JSON.stringify(results, null, 4));
+}
+
+function saveCrushedUrls(url) {
+  crashedUrls.push(url);
+  fs.writeFileSync('crushed-urls__' + baseFileName, JSON.stringify(crashedUrls, null, 4));
 }
 
 async function parseItems($) {
@@ -147,3 +167,6 @@ function getValidLink(link) {
   return URLresolve('https://up18.by/', link);
 }
 
+function getJsonFromFile(fileName) {
+  return JSON.parse(fs.readFileSync(fileName));
+}
